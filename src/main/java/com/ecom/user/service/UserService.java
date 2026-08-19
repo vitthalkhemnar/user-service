@@ -1,11 +1,9 @@
 package com.ecom.user.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import com.ecom.user.entity.Address;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
 import com.ecom.user.request.LoginRequest;
