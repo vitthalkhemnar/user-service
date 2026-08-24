@@ -24,22 +24,20 @@ public class AddressService {
 	private final UserService userService;
 	
 	public AddressResponse addAddress(AddressRequest req) {
-		String userId = req.getUserId();
-		Optional<User> userOpt = userService.getUser(Long.valueOf(userId));
+		Optional<User> userOpt = userService.getCurrentUser();
 		
 		if(userOpt.isEmpty()) {
-			log.info("User not found for userId: {}", userId);
 			return null;
 		}
 		
 		Address address = new Address();
-		address.setHouseNo(req.getHouseNo());
-		address.setStreet(req.getStreet());
-		address.setLandmark(req.getLandmark());
-		address.setCity(req.getCity());
-		address.setState(req.getState());
-		address.setCountry(req.getCountry());
-		address.setPincode(req.getPincode());
+		address.setHouseNo(req.houseNo());
+		address.setStreet(req.street());
+		address.setLandmark(req.landmark());
+		address.setCity(req.city());
+		address.setState(req.state());
+		address.setCountry(req.country());
+		address.setPincode(req.pincode());
 		address.setUser(userOpt.get());
 		
 		Address savedAddress = addressRepo.save(address);
@@ -47,22 +45,20 @@ public class AddressService {
 		return buildAddressResponse(savedAddress);
 	}
 
-	public List<AddressResponse> getAllAddresses(String userId) {
-		Optional<User> userOpt = userService.getUser(Long.valueOf(userId));
+	public List<AddressResponse> getAllAddresses() {
+		Optional<User> userOpt = userService.getCurrentUser();
 
 		if (userOpt.isEmpty()) {
-			log.info("User not found for userId: {}", userId);
 			return null;
 		}
 		
 		List<Address> addressList = addressRepo.findByUser(userOpt.get());
-		
 		return addressList.stream().map(a -> buildAddressResponse(a)).toList();
 	}
 	
 	private AddressResponse buildAddressResponse(Address address) {
 		return AddressResponse.builder()
-				.userId(address.getUser().getId().toString())
+				.username(address.getUser().getUsername())
 				.houseNo(address.getHouseNo())
 				.street(address.getStreet())
 				.landmark(address.getLandmark())

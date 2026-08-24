@@ -37,10 +37,10 @@ public class AddressController {
 		return ResponseEntity.ok().body(address);
 	}
 	
-	@GetMapping("/{userId}")
-	public ResponseEntity<?> getAddresses(@PathVariable("userId") String userId) {
+	@GetMapping
+	public ResponseEntity<?> getAddresses() {
 		
-		List<AddressResponse> allAddresses = addressService.getAllAddresses(userId);
+		List<AddressResponse> allAddresses = addressService.getAllAddresses();
 		
 		if(CommonUtil.isEmpty(allAddresses))
 			return ResponseEntity.noContent().build();
