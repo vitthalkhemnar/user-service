@@ -1,4 +1,4 @@
-package com.ecom.user.security.config;
+package com.ecom.user.security;
 
 import java.io.IOException;
 import java.util.List;
@@ -57,6 +57,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				
 				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				
+				Thread.currentThread().setName(username);
+
 				SecurityContextHolder.getContext().setAuthentication(authToken);
 			}
 		}

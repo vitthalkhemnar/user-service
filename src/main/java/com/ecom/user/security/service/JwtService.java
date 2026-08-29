@@ -2,6 +2,7 @@ package com.ecom.user.security.service;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -19,7 +20,7 @@ public class JwtService {
 
 	// Use a secure 256-bit key (at least 32 characters long)
 	private static final String SECRET_STRING = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
-	private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24 hours
+	private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 1; // 1 Hour
 
 	private SecretKey getSigningKey() {
 		byte[] keyBytes = SECRET_STRING.getBytes();
@@ -27,7 +28,7 @@ public class JwtService {
 	}
 	
 	public String generateToken(UserDetails userDetails) {
-		return generateToken(new HashMap<>(), userDetails);
+		return generateToken(Map.of("role", List.of("USER")), userDetails);
 	}
 	
 	public String generateToken(Map extraClaims, UserDetails userDetails) {
