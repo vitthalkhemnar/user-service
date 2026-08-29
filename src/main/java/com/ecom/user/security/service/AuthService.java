@@ -7,11 +7,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ecom.user.dto.AuthResponse;
+import com.ecom.user.dto.LoginRequest;
+import com.ecom.user.dto.RegisterRequest;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
-import com.ecom.user.request.LoginRequest;
-import com.ecom.user.request.RegisterRequest;
-import com.ecom.user.response.AuthResponse;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +34,8 @@ public class AuthService {
 		user.setPassword(passworEncoder.encode(req.password()));
 		user.setEmail(req.email());
 		user.setPhone(req.phone());
+		user.setFirstName(req.firstName());
+		user.setLastName(req.lastName());
 		userRepo.save(user);
 		
 		UserDetails userDetails = userDetailsService.loadUserByUsername(req.username());

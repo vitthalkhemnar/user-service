@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ecom.user.request.LoginRequest;
-import com.ecom.user.request.RegisterRequest;
+import com.ecom.user.dto.LoginRequest;
+import com.ecom.user.dto.RegisterRequest;
 import com.ecom.user.security.service.AuthService;
 
 import lombok.RequiredArgsConstructor;

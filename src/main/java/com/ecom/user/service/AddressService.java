@@ -5,11 +5,12 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.ecom.user.dto.AddressRequest;
+import com.ecom.user.dto.AddressResponse;
+import com.ecom.user.dto.UserResponse;
 import com.ecom.user.entity.Address;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.AddressRepository;
-import com.ecom.user.request.AddressRequest;
-import com.ecom.user.response.AddressResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,15 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 public class AddressService {
 	
 	private final AddressRepository addressRepo;
-	
 	private final UserService userService;
 	
 	public AddressResponse addAddress(AddressRequest req) {
-		Optional<User> userOpt = userService.getCurrentUser();
-		
-		if(userOpt.isEmpty()) {
-			return null;
-		}
+		User user = userService.getCurrentUser();
 		
 		Address address = new Address();
 		address.setHouseNo(req.houseNo());
@@ -38,7 +34,7 @@ public class AddressService {
 		address.setState(req.state());
 		address.setCountry(req.country());
 		address.setPincode(req.pincode());
-		address.setUser(userOpt.get());
+		address.setUser(user);
 		
 		Address savedAddress = addressRepo.save(address);
 		
@@ -46,13 +42,9 @@ public class AddressService {
 	}
 
 	public List<AddressResponse> getAllAddresses() {
-		Optional<User> userOpt = userService.getCurrentUser();
+		User user = userService.getCurrentUser();
 
-		if (userOpt.isEmpty()) {
-			return null;
-		}
-		
-		List<Address> addressList = addressRepo.findByUser(userOpt.get());
+		List<Address> addressList = addressRepo.findByUser(user);
 		return addressList.stream().map(a -> buildAddressResponse(a)).toList();
 	}
 	

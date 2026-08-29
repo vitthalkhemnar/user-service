@@ -1,12 +1,9 @@
-package com.ecom.user.response;
+package com.ecom.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import lombok.Builder;
-
-@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record AddressResponse(
+public record AddressRequest(
         String username,
         String houseNo,
         String street,

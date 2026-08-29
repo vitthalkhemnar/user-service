@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ecom.user.request.AddressRequest;
-import com.ecom.user.response.AddressResponse;
+import com.ecom.user.dto.AddressRequest;
+import com.ecom.user.dto.AddressResponse;
 import com.ecom.user.service.AddressService;
 import com.ecom.user.util.CommonUtil;
 

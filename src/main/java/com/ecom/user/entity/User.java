@@ -32,15 +32,21 @@ public class User {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
+	@Column(name = "first_name")
+	private String firstName;
+	
+	@Column(name = "last_name")
+	private String lastName;
+	
+	private String email;
+	
+	private String phone;
+	
 	@Column(unique = true, nullable = false)
 	private String username;
 	
 	@Column(nullable = false)
 	private String password;
-	
-	private String email;
-	
-	private String phone;
 	
 	@OneToMany(mappedBy = "user")
 	private List<Address> address = new ArrayList<>();
