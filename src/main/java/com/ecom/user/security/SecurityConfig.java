@@ -21,6 +21,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.ecom.user.util.AppConstants;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -39,6 +41,7 @@ public class SecurityConfig {
 			.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests(requests -> requests
 					.requestMatchers("/auth/**").permitAll()
+					.requestMatchers("/admin/**").hasRole(AppConstants.ROLE_ADMIN)
 					.anyRequest().authenticated()
 			)
 			.sessionManagement(session -> session

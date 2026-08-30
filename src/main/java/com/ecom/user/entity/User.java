@@ -48,6 +48,8 @@ public class User {
 	@Column(nullable = false)
 	private String password;
 	
+	private String roles;
+	
 	@OneToMany(mappedBy = "user")
 	private List<Address> address = new ArrayList<>();
 	
