@@ -1,6 +1,6 @@
 package com.ecom.user.dto;
 
-public record UserUpdate(
+public record UserUpdateRequest(
     Long id,
     String username,
     String firstName,

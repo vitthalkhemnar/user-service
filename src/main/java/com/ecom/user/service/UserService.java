@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecom.user.dto.UserResponse;
-import com.ecom.user.dto.UserUpdate;
+import com.ecom.user.dto.UserUpdateRequest;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
 import com.ecom.user.util.AppConstants;
@@ -20,25 +20,25 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UserService {
 
-	private final UserRepository userRepo;
+	private final UserRepository userRepository;
 
 	public UserResponse getUserProfile() {
 		String username = CommonUtil.getCurrentUsername();
-		return userRepo.findByUsername(username).map(this::mapToResponse).get();
+		return userRepository.findByUsername(username).map(this::mapToResponse).get();
 	}
 	
 	public User getCurrentUser() {
 		String username = CommonUtil.getCurrentUsername();
-		return userRepo.findByUsername(username).orElseThrow(RuntimeException::new);
+		return userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
 	}
 	
 	public List<UserResponse> getAllUsers() {
-		return userRepo.findAll().stream().map(this::mapToResponse).toList();
+		return userRepository.findAll().stream().map(this::mapToResponse).toList();
 	}
 	
 	@Transactional
-	public UserResponse updateUserById(UserUpdate req) {
-		User user = userRepo.findById(req.id()).orElseThrow(RuntimeException::new);
+	public UserResponse updateUserById(UserUpdateRequest req) {
+		User user = userRepository.findById(req.id()).orElseThrow(RuntimeException::new);
 		
 		user.setUsername(req.username());
 		user.setFirstName(req.firstName());
@@ -49,13 +49,13 @@ public class UserService {
 			user.setRoles(AppConstants.ROLE_ADMIN);
 		}
 		
-		User savedUser = userRepo.save(user);
+		User savedUser = userRepository.save(user);
 		return mapToResponse(savedUser);
 	}
 	
 	public boolean deleteUser(Long userId) {
 		try {
-			userRepo.deleteById(userId);
+			userRepository.deleteById(userId);
 			log.info("User with userId: {} deleted successfully.", userId);
 			return true;
 		} catch (Exception e) {

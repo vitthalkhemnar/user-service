@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-@FeignClient(name = "ProductService", url = "http://localhost:9091")
+import com.ecom.user.config.FeignClientConfig;
+
+@FeignClient(name = "ProductService", url = "http://localhost:9091", configuration = FeignClientConfig.class)
 public interface ProductClient {
 
-	@GetMapping("/products")
+	@GetMapping("/product")
 	public ResponseEntity<?> getAllProducts();
 	
-	@PostMapping(value = "/products/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<?> bulkUpload(@RequestParam("file") MultipartFile file);
 }
