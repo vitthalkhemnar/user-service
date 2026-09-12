@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AddressRequest(
-        String username,
-        String houseNo,
-        String street,
-        String landmark,
+		Long addressId,
+        String building,
+        String area,
         String city,
         String state,
         String country,

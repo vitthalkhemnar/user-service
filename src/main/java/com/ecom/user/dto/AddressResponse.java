@@ -7,10 +7,9 @@ import lombok.Builder;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AddressResponse(
-        String username,
-        String houseNo,
-        String street,
-        String landmark,
+		Long addressId,
+        String building,
+        String area,
         String city,
         String state,
         String country,

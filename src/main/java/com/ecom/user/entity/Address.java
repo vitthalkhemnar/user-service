@@ -32,13 +32,10 @@ public class Address {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long addressId;
 	
-	@Column(name = "house_no")
-	private String houseNo;
+	private String building;
 	
-	private String street;
-	
-	private String landmark;
-		
+	private String area;
+			
 	private String city;
 	
 	private String state;

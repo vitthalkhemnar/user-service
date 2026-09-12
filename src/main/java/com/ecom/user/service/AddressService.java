@@ -1,13 +1,11 @@
 package com.ecom.user.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.ecom.user.dto.AddressRequest;
 import com.ecom.user.dto.AddressResponse;
-import com.ecom.user.dto.UserResponse;
 import com.ecom.user.entity.Address;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.AddressRepository;
@@ -23,37 +21,46 @@ public class AddressService {
 	private final AddressRepository addressRepo;
 	private final UserService userService;
 	
-	public AddressResponse addAddress(AddressRequest req) {
+	public List<AddressResponse> addAddress(AddressRequest req) {
 		User user = userService.getCurrentUser();
 		
 		Address address = new Address();
-		address.setHouseNo(req.houseNo());
-		address.setStreet(req.street());
-		address.setLandmark(req.landmark());
+		if(req.addressId() != null)
+			address = addressRepo.findById(req.addressId()).orElseThrow(() -> new RuntimeException());
+		
+		address.setBuilding(req.building());
+		address.setArea(req.area());
 		address.setCity(req.city());
 		address.setState(req.state());
 		address.setCountry(req.country());
 		address.setPincode(req.pincode());
 		address.setUser(user);
 		
-		Address savedAddress = addressRepo.save(address);
-		
-		return buildAddressResponse(savedAddress);
+		addressRepo.save(address);
+
+		return user.getAddress().stream().map(this::buildAddressResponse).toList();
 	}
 
 	public List<AddressResponse> getAllAddresses() {
 		User user = userService.getCurrentUser();
 
 		List<Address> addressList = addressRepo.findByUser(user);
-		return addressList.stream().map(a -> buildAddressResponse(a)).toList();
+		return addressList.stream().map(this::buildAddressResponse).toList();
 	}
 	
+	public List<AddressResponse> deleteAddress(Long addressId) {
+		addressRepo.deleteById(addressId);
+		return userService.getCurrentUser()
+				.getAddress().stream()
+				.map(this::buildAddressResponse)
+				.toList();
+	}
+
 	private AddressResponse buildAddressResponse(Address address) {
 		return AddressResponse.builder()
-				.username(address.getUser().getUsername())
-				.houseNo(address.getHouseNo())
-				.street(address.getStreet())
-				.landmark(address.getLandmark())
+				.addressId(address.getAddressId())
+				.building(address.getBuilding())
+				.area(address.getArea())
 				.city(address.getCity())
 				.state(address.getState())
 				.country(address.getCountry())
