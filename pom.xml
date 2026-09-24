@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.ecom</groupId>
-	<artifactId>UserService</artifactId>
+	<artifactId>user-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>UserService</name>
+	<name>user-service</name>
 	<description />
 	<url />
 	<licenses>
@@ -94,6 +94,10 @@
 			<groupId>io.github.openfeign.form</groupId>
 			<artifactId>feign-form-spring</artifactId>
 			<version>3.8.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
 	</dependencies>
 
