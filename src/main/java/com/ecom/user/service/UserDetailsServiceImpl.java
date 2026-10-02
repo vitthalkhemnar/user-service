@@ -1,4 +1,4 @@
-package com.ecom.user.security.service;
+package com.ecom.user.service;
 
 import org.springframework.security.core.userdetails.User.UserBuilder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -6,9 +6,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.ecom.user.constants.AppConstants;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
-import com.ecom.user.util.AppConstants;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,4 +1,4 @@
-package com.ecom.user.security.service;
+package com.ecom.user.service;
 
 import java.util.Date;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package com.ecom.user.security;
+package com.ecom.user.config;
 
 import java.util.List;
 
@@ -22,7 +22,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.ecom.user.util.AppConstants;
+import com.ecom.user.constants.AppConstants;
+import com.ecom.user.filter.JwtAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
 

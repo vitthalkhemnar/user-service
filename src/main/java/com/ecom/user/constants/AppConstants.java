@@ -1,4 +1,4 @@
-package com.ecom.user.util;
+package com.ecom.user.constants;
 
 public interface AppConstants {
 	

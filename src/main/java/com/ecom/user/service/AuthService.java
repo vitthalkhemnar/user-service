@@ -1,4 +1,4 @@
-package com.ecom.user.security.service;
+package com.ecom.user.service;
 
 import java.util.List;
 import java.util.Map;
@@ -11,12 +11,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ecom.user.constants.AppConstants;
 import com.ecom.user.dto.AuthResponse;
 import com.ecom.user.dto.LoginRequest;
 import com.ecom.user.dto.RegisterRequest;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
-import com.ecom.user.util.AppConstants;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

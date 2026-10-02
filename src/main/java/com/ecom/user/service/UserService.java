@@ -5,11 +5,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ecom.user.constants.AppConstants;
 import com.ecom.user.dto.UserResponse;
 import com.ecom.user.dto.UserUpdateRequest;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
-import com.ecom.user.util.AppConstants;
 import com.ecom.user.util.CommonUtil;
 
 import lombok.RequiredArgsConstructor;
