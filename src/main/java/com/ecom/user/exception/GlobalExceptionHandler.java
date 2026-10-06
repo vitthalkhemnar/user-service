@@ -17,7 +17,15 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	// Handle specific known exceptions first (more specific → less specific order matters)
+	@ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+	public ResponseEntity<?> handleAuthenticationException(org.springframework.security.core.AuthenticationException e) {
+		return buildResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
+	}
+
+	@ExceptionHandler(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
+	public ResponseEntity<?> handleUsernameNotFound(org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+		return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException e) {

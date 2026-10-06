@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -24,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.ecom.user.constants.AppConstants;
 import com.ecom.user.filter.JwtAuthenticationFilter;
+import com.ecom.user.security.OtpAuthenticationProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +36,7 @@ public class SecurityConfig {
 	
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final UserDetailsService userDetailsService;
+	private final OtpAuthenticationProvider otpAuthenticationProvider;
 	
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -48,7 +51,8 @@ public class SecurityConfig {
 			.sessionManagement(session -> session
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			)
-			.authenticationProvider(authenticationProvider())
+			.authenticationProvider(daoAuthenticationProvider())
+			.authenticationProvider(otpAuthenticationProvider)
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
@@ -75,14 +79,14 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	AuthenticationProvider authenticationProvider() {
+	DaoAuthenticationProvider daoAuthenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
 		authProvider.setPasswordEncoder(passwordEncoder());
 		return authProvider;
 	}
 	
 	@Bean
-	AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-		return config.getAuthenticationManager();
+	AuthenticationManager authenticationManager() {
+		return new ProviderManager(List.of(daoAuthenticationProvider(), otpAuthenticationProvider));
 	}
 }

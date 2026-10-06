@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ecom.user.dto.AdminLoginRequest;
 import com.ecom.user.dto.LoginRequest;
 import com.ecom.user.dto.RegisterRequest;
+import com.ecom.user.dto.SendOtpRequest;
+import com.ecom.user.dto.VerifyOtpRequest;
 import com.ecom.user.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,9 +22,19 @@ public class AuthController {
 
 	private final AuthService authService;
 
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-		return ResponseEntity.ok(authService.login(req));
+	@PostMapping("/admin/login")
+	public ResponseEntity<?> adminLogin(@RequestBody AdminLoginRequest req) {
+		return ResponseEntity.ok(authService.adminLogin(req));
+	}
+
+	@PostMapping("/send-otp")
+	public ResponseEntity<?> sendOtp(@RequestBody SendOtpRequest req) {
+		return ResponseEntity.ok(authService.sendOtp(req));
+	}
+
+	@PostMapping("/verify-otp")
+	public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest req) {
+		return ResponseEntity.ok(authService.verifyOtp(req));
 	}
 
 	@PostMapping("/register")

@@ -6,17 +6,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import feign.RequestInterceptor;
-import feign.codec.Encoder;
-import feign.form.spring.SpringFormEncoder;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 public class FeignClientConfig {
-
-	@Bean
-	Encoder feignEncoder() {
-		return new SpringFormEncoder();
-	}
 
 	@Bean
 	RequestInterceptor requestInterceptor() {

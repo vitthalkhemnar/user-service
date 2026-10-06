@@ -34,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
+        return path != null && path.startsWith("/auth/");
     }
 
 	@Override
@@ -42,6 +42,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 
 		String authHeader = request.getHeader("Authorization");
+
+		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 
 		String jwt = authHeader.substring(7);
 		String username = jwtService.extractUsername(jwt);
