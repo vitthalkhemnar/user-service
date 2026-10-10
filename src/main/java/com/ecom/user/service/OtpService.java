@@ -65,4 +65,33 @@ public class OtpService {
 			redisTemplate.delete(normalizedEmail);
 		}
 	}
+
+	public String generateAndSendPhoneOtp(String phone) {
+		String normalizedPhone = phone.trim();
+		String otp = String.format("%06d", secureRandom.nextInt(1_000_000));
+
+		redisTemplate.opsForValue().set(
+				"OTP_PHONE:" + normalizedPhone,
+				otp,
+				OTP_EXPIRY_MINUTES,
+				TimeUnit.MINUTES
+		);
+
+		log.info("Generated Phone OTP for {}: {}", normalizedPhone, otp);
+		return otp;
+	}
+
+	public boolean validatePhoneOtp(String phone, String otp) {
+		if (phone == null || otp == null || otp.isBlank()) {
+			return false;
+		}
+		String storedOtp = redisTemplate.opsForValue().get("OTP_PHONE:" + phone.trim());
+		return storedOtp != null && storedOtp.equals(otp.trim());
+	}
+
+	public void consumePhoneOtp(String phone, String otp) {
+		if (phone != null) {
+			redisTemplate.delete("OTP_PHONE:" + phone.trim());
+		}
+	}
 }

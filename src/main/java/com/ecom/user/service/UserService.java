@@ -23,13 +23,14 @@ public class UserService {
 	private final UserRepository userRepository;
 
 	public UserResponse getUserProfile() {
-		String username = CommonUtil.getCurrentUsername();
-		return userRepository.findByUsername(username).map(this::mapToResponse).get();
+		return mapToResponse(getCurrentUser());
 	}
 	
 	public User getCurrentUser() {
-		String username = CommonUtil.getCurrentUsername();
-		return userRepository.findByUsername(username).orElseThrow(RuntimeException::new);
+		String identifier = CommonUtil.getCurrentUsername();
+		return userRepository.findByPhone(identifier)
+				.or(() -> userRepository.findByEmail(identifier))
+				.orElseThrow(RuntimeException::new);
 	}
 	
 	public List<UserResponse> getAllUsers() {
@@ -40,12 +41,20 @@ public class UserService {
 	public UserResponse updateUserById(UserUpdateRequest req) {
 		User user = userRepository.findById(req.id()).orElseThrow(RuntimeException::new);
 		
-		user.setUsername(req.username());
-		user.setFirstName(req.firstName());
-		user.setLastName(req.lastName());
-		user.setPhone(req.phone());
+		if (req.firstName() != null) user.setFirstName(req.firstName());
+		if (req.lastName() != null) user.setLastName(req.lastName());
+		if (req.phone() != null && !req.phone().isBlank()) user.setPhone(req.phone().trim());
+		if (req.email() != null && !req.email().isBlank()) {
+			String normalizedEmail = req.email().trim().toLowerCase();
+			userRepository.findByEmail(normalizedEmail).ifPresent(existing -> {
+				if (!existing.getId().equals(user.getId())) {
+					throw new IllegalArgumentException("Email already in use: " + req.email());
+				}
+			});
+			user.setEmail(normalizedEmail);
+		}
 		
-		if(req.isAdmin()) {
+		if (req.isAdmin()) {
 			user.setRoles(AppConstants.ROLE_ADMIN);
 		}
 		
@@ -70,10 +79,11 @@ public class UserService {
         }
 		
 		boolean isAdmin = AppConstants.ROLE_ADMIN.equals(user.getRoles());
+		String displayName = user.getFirstName() != null ? user.getFirstName() : user.getPhone();
 
         return new UserResponse(
             user.getId(),
-            user.getUsername(),
+            displayName,
             user.getFirstName(),
             user.getLastName(),
             user.getEmail(),

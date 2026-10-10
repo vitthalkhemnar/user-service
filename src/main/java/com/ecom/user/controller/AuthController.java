@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.user.dto.AdminLoginRequest;
-import com.ecom.user.dto.LoginRequest;
-import com.ecom.user.dto.RegisterRequest;
+import com.ecom.user.dto.PhoneSignupRequest;
 import com.ecom.user.dto.SendOtpRequest;
+import com.ecom.user.dto.SendPhoneOtpRequest;
 import com.ecom.user.dto.VerifyOtpRequest;
+import com.ecom.user.dto.VerifyPhoneOtpRequest;
 import com.ecom.user.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,23 @@ public class AuthController {
 		return ResponseEntity.ok(authService.verifyOtp(req));
 	}
 
-	@PostMapping("/register")
-	public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-		return ResponseEntity.ok(authService.register(req));
+	@PostMapping("/send-phone-otp")
+	public ResponseEntity<?> sendPhoneOtp(@RequestBody SendPhoneOtpRequest req) {
+		return ResponseEntity.ok(authService.sendPhoneOtp(req));
+	}
+
+	@PostMapping("/register-phone")
+	public ResponseEntity<?> registerWithPhone(@RequestBody PhoneSignupRequest req) {
+		return ResponseEntity.ok(authService.registerWithPhone(req));
+	}
+
+	@PostMapping("/send-phone-login-otp")
+	public ResponseEntity<?> sendPhoneLoginOtp(@RequestBody SendPhoneOtpRequest req) {
+		return ResponseEntity.ok(authService.sendPhoneLoginOtp(req));
+	}
+
+	@PostMapping("/verify-phone-login-otp")
+	public ResponseEntity<?> verifyPhoneLoginOtp(@RequestBody VerifyPhoneOtpRequest req) {
+		return ResponseEntity.ok(authService.verifyPhoneLoginOtp(req));
 	}
 }
