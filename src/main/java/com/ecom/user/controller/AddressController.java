@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.user.dto.AddressRequest;
+import com.ecom.user.dto.AddressResponse;
 import com.ecom.user.service.AddressService;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,15 @@ public class AddressController {
 	@GetMapping
 	public ResponseEntity<?> getAddresses() {
 		return ResponseEntity.ok().body(addressService.getAllAddresses());
+	}
+
+	@GetMapping("/{addressId}")
+	public ResponseEntity<?> getAddressById(@PathVariable("addressId") Long addressId) {
+		AddressResponse addr = addressService.getAddressById(addressId);
+		if (addr == null) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(addr);
 	}
 
 	@DeleteMapping("/{addressId}")

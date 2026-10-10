@@ -56,6 +56,12 @@ public class AddressService {
 				.toList();
 	}
 
+	public AddressResponse getAddressById(Long addressId) {
+		if (addressId == null) return null;
+		Address address = addressRepo.findById(addressId).orElse(null);
+		return address != null ? buildAddressResponse(address) : null;
+	}
+
 	private AddressResponse buildAddressResponse(Address address) {
 		return AddressResponse.builder()
 				.addressId(address.getAddressId())

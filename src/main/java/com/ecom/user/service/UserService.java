@@ -25,6 +25,14 @@ public class UserService {
 	public UserResponse getUserProfile() {
 		return mapToResponse(getCurrentUser());
 	}
+
+	public UserResponse getUserByUsername(String identifier) {
+		if (identifier == null || identifier.isBlank()) return null;
+		User user = userRepository.findByPhone(identifier)
+				.or(() -> userRepository.findByEmail(identifier))
+				.orElse(null);
+		return mapToResponse(user);
+	}
 	
 	public User getCurrentUser() {
 		String identifier = CommonUtil.getCurrentUsername();

@@ -29,6 +29,15 @@ public class UserController {
 		UserResponse user = userService.getUserProfile();
 		return ResponseEntity.ok(user);
 	}
+
+	@GetMapping("/by-username/{username}")
+	public ResponseEntity<?> getUserByUsername(@PathVariable("username") String username) {
+		UserResponse user = userService.getUserByUsername(username);
+		if (user == null) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(user);
+	}
 	
 	@GetMapping("/all-users")
 	public ResponseEntity<?> getAllUsers() {
