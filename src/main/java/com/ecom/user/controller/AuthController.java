@@ -1,5 +1,7 @@
 package com.ecom.user.controller;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -7,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.user.dto.AdminLoginRequest;
+import com.ecom.user.dto.AuthResponse;
 import com.ecom.user.dto.PhoneSignupRequest;
 import com.ecom.user.dto.SendOtpRequest;
 import com.ecom.user.dto.SendPhoneOtpRequest;
@@ -14,6 +17,8 @@ import com.ecom.user.dto.VerifyOtpRequest;
 import com.ecom.user.dto.VerifyPhoneOtpRequest;
 import com.ecom.user.service.AuthService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,38 +28,73 @@ public class AuthController {
 
 	private final AuthService authService;
 
+	@Tag(name = "Authentication - Admin", description = "Administrative credentials-based login flow enforcing ROLE_ADMIN authority")
+	@Operation(
+		summary = "Admin login",
+		description = "Authenticates an administrator using username and password. Validates ROLE_ADMIN authority and returns a JWT token with admin claims."
+	)
 	@PostMapping("/admin/login")
-	public ResponseEntity<?> adminLogin(@RequestBody AdminLoginRequest req) {
+	public ResponseEntity<AuthResponse> adminLogin(@RequestBody AdminLoginRequest req) {
 		return ResponseEntity.ok(authService.adminLogin(req));
 	}
 
+	@Tag(name = "Authentication - Email OTP", description = "Customer passwordless login & registration flow using Email and 6-digit OTP stored in Redis")
+	@Operation(
+		summary = "Send OTP to email",
+		description = "Generates a 6-digit OTP, stores it in Redis with key = <email> and a 5-minute TTL, and dispatches the OTP email. Admin accounts are blocked from OTP authentication."
+	)
 	@PostMapping("/send-otp")
-	public ResponseEntity<?> sendOtp(@RequestBody SendOtpRequest req) {
+	public ResponseEntity<Map<String, String>> sendOtp(@RequestBody SendOtpRequest req) {
 		return ResponseEntity.ok(authService.sendOtp(req));
 	}
 
+	@Tag(name = "Authentication - Email OTP", description = "Customer passwordless login & registration flow using Email and 6-digit OTP stored in Redis")
+	@Operation(
+		summary = "Verify email OTP and login/register",
+		description = "Validates the 6-digit OTP against Redis. If no account exists for this email, creates a new user account automatically and issues a JWT token."
+	)
 	@PostMapping("/verify-otp")
-	public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest req) {
+	public ResponseEntity<AuthResponse> verifyOtp(@RequestBody VerifyOtpRequest req) {
 		return ResponseEntity.ok(authService.verifyOtp(req));
 	}
 
+	@Tag(name = "Authentication - Phone OTP", description = "Customer mobile registration and authentication flow using Phone number and SMS OTP")
+	@Operation(
+		summary = "Send OTP for phone registration",
+		description = "Generates and sends an SMS OTP to the provided phone number to initiate phone-based registration."
+	)
 	@PostMapping("/send-phone-otp")
-	public ResponseEntity<?> sendPhoneOtp(@RequestBody SendPhoneOtpRequest req) {
+	public ResponseEntity<Map<String, String>> sendPhoneOtp(@RequestBody SendPhoneOtpRequest req) {
 		return ResponseEntity.ok(authService.sendPhoneOtp(req));
 	}
 
+	@Tag(name = "Authentication - Phone OTP", description = "Customer mobile registration and authentication flow using Phone number and SMS OTP")
+	@Operation(
+		summary = "Register customer with phone number",
+		description = "Verifies the SMS OTP and registers a new customer account with their mobile phone and profile details."
+	)
 	@PostMapping("/register-phone")
-	public ResponseEntity<?> registerWithPhone(@RequestBody PhoneSignupRequest req) {
+	public ResponseEntity<AuthResponse> registerWithPhone(@RequestBody PhoneSignupRequest req) {
 		return ResponseEntity.ok(authService.registerWithPhone(req));
 	}
 
+	@Tag(name = "Authentication - Phone OTP", description = "Customer mobile registration and authentication flow using Phone number and SMS OTP")
+	@Operation(
+		summary = "Send OTP for phone login",
+		description = "Generates and sends an SMS OTP to an existing user's phone number for phone-based login."
+	)
 	@PostMapping("/send-phone-login-otp")
-	public ResponseEntity<?> sendPhoneLoginOtp(@RequestBody SendPhoneOtpRequest req) {
+	public ResponseEntity<Map<String, String>> sendPhoneLoginOtp(@RequestBody SendPhoneOtpRequest req) {
 		return ResponseEntity.ok(authService.sendPhoneLoginOtp(req));
 	}
 
+	@Tag(name = "Authentication - Phone OTP", description = "Customer mobile registration and authentication flow using Phone number and SMS OTP")
+	@Operation(
+		summary = "Verify phone OTP and login",
+		description = "Verifies the SMS OTP for the registered phone number and returns a JWT authentication token."
+	)
 	@PostMapping("/verify-phone-login-otp")
-	public ResponseEntity<?> verifyPhoneLoginOtp(@RequestBody VerifyPhoneOtpRequest req) {
+	public ResponseEntity<AuthResponse> verifyPhoneLoginOtp(@RequestBody VerifyPhoneOtpRequest req) {
 		return ResponseEntity.ok(authService.verifyPhoneLoginOtp(req));
 	}
 }

@@ -1,21 +1,23 @@
 package com.ecom.user.config;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -23,7 +25,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.ecom.user.constants.AppConstants;
 import com.ecom.user.filter.JwtAuthenticationFilter;
 import com.ecom.user.security.OtpAuthenticationProvider;
 
@@ -43,9 +44,9 @@ public class SecurityConfig {
 		http.cors(Customizer.withDefaults())
 			.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests(requests -> requests
-					.requestMatchers("/auth/**").permitAll()
-					.requestMatchers("/users/all-users").hasRole("ADMIN")
-					.requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
+					.requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+					.requestMatchers("/user/all-users", "/users/all-users").hasRole("ADMIN")
+					.requestMatchers(HttpMethod.DELETE, "/user/**", "/users/**").hasRole("ADMIN")
 					.anyRequest().authenticated()
 			)
 			.sessionManagement(session -> session
@@ -75,7 +76,13 @@ public class SecurityConfig {
 
 	@Bean
 	PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
+		Map<String, PasswordEncoder> encoders = new HashMap<>();
+	    encoders.put("bcrypt", new BCryptPasswordEncoder());
+	    encoders.put("noop", NoOpPasswordEncoder.getInstance());
+	    DelegatingPasswordEncoder delegatingPasswordEncoder = new DelegatingPasswordEncoder("bcrypt", encoders);
+	    // Automatically accepts plain text passwords without requiring any prefix:
+	    delegatingPasswordEncoder.setDefaultPasswordEncoderForMatches(NoOpPasswordEncoder.getInstance());
+	    return delegatingPasswordEncoder;
 	}
 
 	@Bean

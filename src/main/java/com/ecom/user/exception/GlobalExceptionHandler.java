@@ -47,6 +47,11 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
 	}
 
+	@ExceptionHandler(org.apache.catalina.connector.ClientAbortException.class)
+	public void handleClientAbort(org.apache.catalina.connector.ClientAbortException e) {
+		log.debug("Client aborted request: {}", e.getMessage());
+	}
+
 	// Catch-all — must be LAST, catches anything not specifically handled above
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<?> handleGeneral(Exception e) {
@@ -60,6 +65,8 @@ public class GlobalExceptionHandler {
 		body.put("status", status.value());
 		body.put("error", status.getReasonPhrase());
 		body.put("message", message);
-		return ResponseEntity.status(status).body(body);
+		return ResponseEntity.status(status)
+				.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+				.body(body);
 	}
 }
