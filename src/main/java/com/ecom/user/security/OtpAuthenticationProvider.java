@@ -29,7 +29,7 @@ public class OtpAuthenticationProvider implements AuthenticationProvider {
 			throw new BadCredentialsException("Invalid or expired OTP");
 		}
 
-		UserDetails userDetails = userDetailsService.loadUserByEmail(email);
+		UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
 		boolean isAdmin = userDetails.getAuthorities().stream()
 				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));

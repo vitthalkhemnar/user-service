@@ -87,7 +87,7 @@ public class UserService {
         }
 		
 		boolean isAdmin = AppConstants.ROLE_ADMIN.equals(user.getRoles());
-		String displayName = user.getFirstName() != null ? user.getFirstName() : user.getPhone();
+		String displayName = user.getFirstName() != null ? user.getFirstName() : "";
 
         return new UserResponse(
             user.getId(),

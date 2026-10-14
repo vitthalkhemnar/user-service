@@ -22,24 +22,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
-		User user = userRepository.findByPhone(identifier)
-				.or(() -> userRepository.findByEmail(identifier))
-				.orElseThrow(() -> new UsernameNotFoundException("No user found with phone or email: " + identifier));
+		User user = userRepository.findByEmail(identifier)
+				.orElseThrow(() -> new UsernameNotFoundException("No user found with email: " + identifier));
 
-		return buildUserDetails(user);
-	}
-
-	public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
-		String normalizedEmail = email.trim().toLowerCase();
-		User user = userRepository.findByEmail(normalizedEmail)
-				.orElseThrow(() -> new UsernameNotFoundException("No user found with email: " + normalizedEmail));
 		return buildUserDetails(user);
 	}
 
 	private UserDetails buildUserDetails(User user) {
 		String role = user.getRoles();
 		String password = user.getPassword() != null ? user.getPassword() : "";
-		String principal = user.getPhone() != null ? user.getPhone() : user.getEmail();
+		String principal = user.getEmail();
 
 		UserBuilder builder = org.springframework.security.core.userdetails.User.builder()
 				.username(principal)

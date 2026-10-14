@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Customer registration request using mobile phone and SMS OTP")
-public record PhoneSignupRequest(
+public record SignupRequest(
 		@Schema(description = "Customer mobile phone number", example = "+919876543210", requiredMode = Schema.RequiredMode.REQUIRED)
 		String phone,
 

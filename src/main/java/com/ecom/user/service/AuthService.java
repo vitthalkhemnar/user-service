@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ecom.user.constants.AppConstants;
 import com.ecom.user.dto.AdminLoginRequest;
 import com.ecom.user.dto.AuthResponse;
-import com.ecom.user.dto.PhoneSignupRequest;
+import com.ecom.user.dto.SignupRequest;
 import com.ecom.user.dto.SendOtpRequest;
 import com.ecom.user.dto.SendPhoneOtpRequest;
 import com.ecom.user.dto.VerifyOtpRequest;
@@ -67,13 +67,6 @@ public class AuthService {
 		}
 
 		String normalizedEmail = email.trim().toLowerCase();
-		User user = userRepo.findByEmail(normalizedEmail)
-				.orElseThrow(() -> new IllegalArgumentException("No account found with this email. Please sign up."));
-
-		if (user.getRoles() != null && user.getRoles().contains("ROLE_ADMIN")) {
-			throw new IllegalArgumentException("Admin accounts must log in through the Admin Portal.");
-		}
-
 		otpService.generateAndSendOtp(normalizedEmail);
 
 		return Map.of("message", "OTP sent successfully to " + email);
@@ -104,40 +97,27 @@ public class AuthService {
 		return new AuthResponse(token, displayName, roles);
 	}
 
-	public Map<String, String> sendPhoneOtp(SendPhoneOtpRequest req) {
-		String phone = req.phone();
-		if (phone == null || phone.isBlank()) {
-			throw new IllegalArgumentException("Phone number cannot be empty");
-		}
-		String normalizedPhone = phone.trim();
-		if (userRepo.existsByPhone(normalizedPhone)) {
-			throw new IllegalArgumentException("An account with this phone number already exists. Please log in.");
-		}
-
-		String otp = otpService.generateAndSendPhoneOtp(normalizedPhone);
-		return Map.of("message", "OTP sent successfully to " + phone, "otp", otp);
-	}
-
 	@Transactional
-	public AuthResponse registerWithPhone(PhoneSignupRequest req) {
+	public AuthResponse register(SignupRequest req) {
 		if (req.phone() == null || req.phone().isBlank()) {
 			throw new IllegalArgumentException("Phone number is required");
 		}
-		String normalizedPhone = req.phone().trim();
-		if (userRepo.existsByPhone(normalizedPhone)) {
-			throw new IllegalArgumentException("An account with this phone number already exists. Please log in.");
+		
+		if (req.email() == null || req.email().isBlank()) {
+			throw new IllegalArgumentException("Email is required");
 		}
-		if (req.otp() == null || !otpService.validatePhoneOtp(normalizedPhone, req.otp())) {
+		String normalizedEmail = req.email().trim();
+		if (userRepo.existsByEmail(normalizedEmail)) {
+			throw new IllegalArgumentException("Email already exists: " + req.email());
+		}
+		if (req.otp() == null || !otpService.validateOtp(normalizedEmail, req.otp())) {
 			throw new BadCredentialsException("Invalid or expired OTP");
 		}
-		otpService.consumePhoneOtp(normalizedPhone, req.otp());
+		otpService.consumeOtp(normalizedEmail, req.otp());
 
-		String normalizedEmail = null;
-		if (req.email() != null && !req.email().isBlank()) {
-			normalizedEmail = req.email().trim().toLowerCase();
-			if (userRepo.existsByEmail(normalizedEmail)) {
-				throw new IllegalArgumentException("Email already exists: " + req.email());
-			}
+		String normalizedPhone = null;
+		if (req.phone() != null && !req.phone().isBlank()) {
+			normalizedPhone = req.email().trim().toLowerCase();
 		}
 
 		User user = new User();
@@ -148,60 +128,13 @@ public class AuthService {
 		user.setRoles(AppConstants.ROLE_USER);
 		User saved = userRepo.save(user);
 
-		UserDetails userDetails = userDetailsService.loadUserByUsername(normalizedPhone);
+		UserDetails userDetails = userDetailsService.loadUserByUsername(normalizedEmail);
 		List<String> roles = userDetails.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority)
 				.toList();
 
 		String token = jwtService.generateToken(Map.of("role", roles), userDetails);
 		String displayName = saved.getFirstName() != null ? saved.getFirstName() : saved.getPhone();
-		return new AuthResponse(token, displayName, roles);
-	}
-
-	public Map<String, String> sendPhoneLoginOtp(SendPhoneOtpRequest req) {
-		String phone = req.phone();
-		if (phone == null || phone.isBlank()) {
-			throw new IllegalArgumentException("Phone number cannot be empty");
-		}
-		String normalizedPhone = phone.trim();
-		User user = userRepo.findByPhone(normalizedPhone)
-				.orElseThrow(() -> new IllegalArgumentException("No account found with this phone number. Please sign up."));
-
-		if (user.getRoles() != null && user.getRoles().contains("ROLE_ADMIN")) {
-			throw new IllegalArgumentException("Admin accounts must log in through the Admin Portal.");
-		}
-
-		String otp = otpService.generateAndSendPhoneOtp(normalizedPhone);
-		return Map.of("message", "OTP sent successfully to " + phone, "otp", otp);
-	}
-
-	public AuthResponse verifyPhoneLoginOtp(VerifyPhoneOtpRequest req) {
-		if (req.phone() == null || req.phone().isBlank()) {
-			throw new IllegalArgumentException("Phone number cannot be empty");
-		}
-		String normalizedPhone = req.phone().trim();
-		User user = userRepo.findByPhone(normalizedPhone)
-				.orElseThrow(() -> new IllegalArgumentException("No account found with this phone number. Please sign up."));
-
-		if (user.getRoles() != null && user.getRoles().contains("ROLE_ADMIN")) {
-			throw new BadCredentialsException("Admin accounts must log in through the Admin Portal.");
-		}
-
-		if (req.otp() == null || !otpService.validatePhoneOtp(normalizedPhone, req.otp())) {
-			throw new BadCredentialsException("Invalid or expired OTP");
-		}
-		otpService.consumePhoneOtp(normalizedPhone, req.otp());
-
-		UserDetails userDetails = userDetailsService.loadUserByUsername(normalizedPhone);
-		List<String> roles = userDetails.getAuthorities().stream()
-				.map(GrantedAuthority::getAuthority)
-				.toList();
-
-		String token = jwtService.generateToken(Map.of("role", roles), userDetails);
-		String displayName = (user.getFirstName() != null && !user.getFirstName().isBlank())
-				? user.getFirstName()
-				: user.getPhone();
-
 		return new AuthResponse(token, displayName, roles);
 	}
 }

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.user.dto.AdminLoginRequest;
 import com.ecom.user.dto.AuthResponse;
-import com.ecom.user.dto.PhoneSignupRequest;
+import com.ecom.user.dto.SignupRequest;
 import com.ecom.user.dto.SendOtpRequest;
 import com.ecom.user.dto.SendPhoneOtpRequest;
 import com.ecom.user.dto.VerifyOtpRequest;
@@ -58,43 +58,13 @@ public class AuthController {
 		return ResponseEntity.ok(authService.verifyOtp(req));
 	}
 
-	@Tag(name = "Authentication - Phone OTP", description = "Customer mobile registration and authentication flow using Phone number and SMS OTP")
-	@Operation(
-		summary = "Send OTP for phone registration",
-		description = "Generates and sends an SMS OTP to the provided phone number to initiate phone-based registration."
-	)
-	@PostMapping("/send-phone-otp")
-	public ResponseEntity<Map<String, String>> sendPhoneOtp(@RequestBody SendPhoneOtpRequest req) {
-		return ResponseEntity.ok(authService.sendPhoneOtp(req));
-	}
-
-	@Tag(name = "Authentication - Phone OTP", description = "Customer mobile registration and authentication flow using Phone number and SMS OTP")
+	@Tag(name = "Authentication - Email OTP", description = "Customer email registration and authentication flow using Email OTP")
 	@Operation(
 		summary = "Register customer with phone number",
-		description = "Verifies the SMS OTP and registers a new customer account with their mobile phone and profile details."
+		description = "Verifies the Email OTP and registers a new customer account with their email and profile details."
 	)
-	@PostMapping("/register-phone")
-	public ResponseEntity<AuthResponse> registerWithPhone(@RequestBody PhoneSignupRequest req) {
-		return ResponseEntity.ok(authService.registerWithPhone(req));
-	}
-
-	@Tag(name = "Authentication - Phone OTP", description = "Customer mobile registration and authentication flow using Phone number and SMS OTP")
-	@Operation(
-		summary = "Send OTP for phone login",
-		description = "Generates and sends an SMS OTP to an existing user's phone number for phone-based login."
-	)
-	@PostMapping("/send-phone-login-otp")
-	public ResponseEntity<Map<String, String>> sendPhoneLoginOtp(@RequestBody SendPhoneOtpRequest req) {
-		return ResponseEntity.ok(authService.sendPhoneLoginOtp(req));
-	}
-
-	@Tag(name = "Authentication - Phone OTP", description = "Customer mobile registration and authentication flow using Phone number and SMS OTP")
-	@Operation(
-		summary = "Verify phone OTP and login",
-		description = "Verifies the SMS OTP for the registered phone number and returns a JWT authentication token."
-	)
-	@PostMapping("/verify-phone-login-otp")
-	public ResponseEntity<AuthResponse> verifyPhoneLoginOtp(@RequestBody VerifyPhoneOtpRequest req) {
-		return ResponseEntity.ok(authService.verifyPhoneLoginOtp(req));
+	@PostMapping("/register")
+	public ResponseEntity<AuthResponse> register(@RequestBody SignupRequest req) {
+		return ResponseEntity.ok(authService.register(req));
 	}
 }
