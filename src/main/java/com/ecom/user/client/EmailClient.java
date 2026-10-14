@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.ecom.user.config.FeignClientConfig;
 import com.ecom.user.dto.SendOtpEmailRequest;
 
-@FeignClient(name = "email-service", url = "http://localhost:9093", configuration = FeignClientConfig.class)
+@FeignClient(name = "email-service", url = "${email-service.url:}", configuration = FeignClientConfig.class)
 public interface EmailClient {
 
 	@PostMapping("/email/otp")
