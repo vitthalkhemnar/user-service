@@ -102,6 +102,7 @@ public class AuthService {
 		if (req.phone() == null || req.phone().isBlank()) {
 			throw new IllegalArgumentException("Phone number is required");
 		}
+		String normalizedPhone = req.phone().trim();
 		
 		if (req.email() == null || req.email().isBlank()) {
 			throw new IllegalArgumentException("Email is required");
@@ -114,11 +115,6 @@ public class AuthService {
 			throw new BadCredentialsException("Invalid or expired OTP");
 		}
 		otpService.consumeOtp(normalizedEmail, req.otp());
-
-		String normalizedPhone = null;
-		if (req.phone() != null && !req.phone().isBlank()) {
-			normalizedPhone = req.email().trim().toLowerCase();
-		}
 
 		User user = new User();
 		user.setPhone(normalizedPhone);
