@@ -10,23 +10,25 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecom.user.constants.AppConstants;
 import com.ecom.user.dto.AdminLoginRequest;
 import com.ecom.user.dto.AuthResponse;
-import com.ecom.user.dto.SignupRequest;
 import com.ecom.user.dto.SendOtpRequest;
-import com.ecom.user.dto.SendPhoneOtpRequest;
+import com.ecom.user.dto.SignupRequest;
 import com.ecom.user.dto.VerifyOtpRequest;
-import com.ecom.user.dto.VerifyPhoneOtpRequest;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
 import com.ecom.user.security.OtpAuthenticationToken;
 
+import io.jsonwebtoken.lang.Arrays;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -65,11 +67,28 @@ public class AuthService {
 		if (email == null || email.isBlank()) {
 			throw new IllegalArgumentException("Email cannot be empty");
 		}
-
 		String normalizedEmail = email.trim().toLowerCase();
-		otpService.generateAndSendOtp(normalizedEmail);
+		
+		if (req.action().equalsIgnoreCase("login")) {
+			try {
+				User user = userRepo.findByEmail(normalizedEmail)
+						.orElseThrow(() -> new UsernameNotFoundException("No user found with email: " + email));
+				String roles = user.getRoles();
+				boolean isAdmin = Arrays.asList(roles.split(",")).stream()
+						.anyMatch(a -> a.equals("ROLE_" + AppConstants.ROLE_ADMIN));
 
-		return Map.of("message", "OTP sent successfully to " + email);
+				if (isAdmin) {
+					log.error("ADMIN cannot logged in via OTP : " + normalizedEmail);
+					return Map.of("status", "fail", "message", "Admin accounts must log in via the Admin Login page.");
+				}
+			} catch (Exception e) {
+				log.error("User not found with this email : " + normalizedEmail);
+				return Map.of("status", "fail", "message", "You don't have account yet, please signup.");
+			}
+		}
+		
+		otpService.generateAndSendOtp(normalizedEmail);
+		return Map.of("status", "success", "message", "OTP sent successfully to " + email);
 	}
 
 	public AuthResponse verifyOtp(VerifyOtpRequest req) {
@@ -83,13 +102,6 @@ public class AuthService {
 				.map(GrantedAuthority::getAuthority)
 				.toList();
 
-		boolean isAdmin = roles.stream()
-				.anyMatch(a -> a.equals("ROLE_ADMIN") || a.equals("ROLE_" + AppConstants.ROLE_ADMIN));
-		
-		if (isAdmin) {
-		    throw new BadCredentialsException("Admin accounts must log in via the Admin Login page.");
-		}
-		
 		String token = jwtService.generateToken(Map.of("role", roles), userDetails);
 		User user = userRepo.findByEmail(req.email().trim().toLowerCase()).orElse(null);
 		String displayName = (user != null && user.getFirstName() != null) ? user.getFirstName() : userDetails.getUsername();

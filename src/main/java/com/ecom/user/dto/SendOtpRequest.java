@@ -8,6 +8,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Request payload to trigger an Email OTP")
 public record SendOtpRequest(
 		@Schema(description = "Customer email address to receive OTP", example = "customer@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
-		String email
+		String email,
+		
+		@Schema(description = "Action to perform", example = "login", requiredMode = Schema.RequiredMode.REQUIRED)
+		String action
 ) {
 }
