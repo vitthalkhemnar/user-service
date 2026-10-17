@@ -66,6 +66,22 @@ public class UserController {
 		}
 		return ResponseEntity.ok(user);
 	}
+	
+	@Tag(name = "User Administration", description = "Administrative endpoints for managing and querying platform users")
+	@Operation(
+		summary = "Get user by userId",
+		description = "Finds and returns user account details by userId. Useful for inter-service communication."
+	)
+	@GetMapping("/{userId}")
+	public ResponseEntity<UserResponse> getUserById(
+			@Parameter(description = "Username of the target user", required = true)
+			@PathVariable("userId") Long userId) {
+		UserResponse user = userService.getUserById(userId);
+		if (user == null) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(user);
+	}
 
 	@Tag(name = "User Administration", description = "Administrative endpoints for managing and querying platform users")
 	@Operation(

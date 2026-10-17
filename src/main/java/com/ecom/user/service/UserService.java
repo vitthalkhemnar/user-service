@@ -46,6 +46,10 @@ public class UserService {
 				.orElseThrow(RuntimeException::new);
 	}
 	
+	public UserResponse getUserById(Long userId) {
+		return mapToResponse(userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException()));
+	}
+	
 	public List<UserResponse> getAllUsers() {
 		return userRepository.findAll().stream().map(this::mapToResponse).toList();
 	}
