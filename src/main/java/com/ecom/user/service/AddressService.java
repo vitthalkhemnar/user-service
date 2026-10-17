@@ -10,6 +10,7 @@ import com.ecom.user.entity.Address;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.AddressRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,9 +26,10 @@ public class AddressService {
 		User user = userService.getCurrentUser();
 		
 		Address address = new Address();
-		if(req.addressId() != null)
-			address = addressRepo.findById(req.addressId()).orElseThrow(() -> new RuntimeException());
-		
+		if(req.addressId() != null) {
+			address = addressRepo.findByAddressIdAndUser(req.addressId(), user).orElse(new Address());
+		}
+			
 		address.setBuilding(req.building());
 		address.setArea(req.area());
 		address.setCity(req.city());
@@ -37,8 +39,10 @@ public class AddressService {
 		address.setUser(user);
 		
 		addressRepo.save(address);
-
-		return user.getAddress().stream().map(this::buildAddressResponse).toList();
+		
+		return addressRepo.findByUser(user)
+				.stream().map(this::buildAddressResponse)
+				.toList();
 	}
 
 	public List<AddressResponse> getAllAddresses() {
@@ -49,16 +53,20 @@ public class AddressService {
 	}
 	
 	public List<AddressResponse> deleteAddress(Long addressId) {
-		addressRepo.deleteById(addressId);
-		return userService.getCurrentUser()
-				.getAddress().stream()
-				.map(this::buildAddressResponse)
+		User user = userService.getCurrentUser();
+
+		addressRepo.deleteByAddressIdAndUser(addressId, user);
+		
+		return addressRepo.findByUser(user)
+				.stream().map(this::buildAddressResponse)
 				.toList();
 	}
 
 	public AddressResponse getAddressById(Long addressId) {
 		if (addressId == null) return null;
-		Address address = addressRepo.findById(addressId).orElse(null);
+		
+		User user = userService.getCurrentUser();
+		Address address = addressRepo.findByAddressIdAndUser(addressId, user).orElse(null);
 		return address != null ? buildAddressResponse(address) : null;
 	}
 
