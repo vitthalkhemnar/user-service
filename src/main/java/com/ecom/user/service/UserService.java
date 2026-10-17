@@ -2,6 +2,10 @@ package com.ecom.user.service;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +16,7 @@ import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
 import com.ecom.user.util.CommonUtil;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,9 +50,27 @@ public class UserService {
 		return userRepository.findAll().stream().map(this::mapToResponse).toList();
 	}
 	
+	@SuppressWarnings("unlikely-arg-type")
 	@Transactional
 	public UserResponse updateUserById(UserUpdateRequest req) {
-		User user = userRepository.findById(req.id()).orElseThrow(RuntimeException::new);
+		User user = userRepository.findById(req.id()).orElseThrow(() -> new EntityNotFoundException());
+
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if(authentication == null || authentication.getAuthorities() == null)
+			throw new AccessDeniedException("Access denied.");
+		
+		boolean isCallerAdmin = authentication.getAuthorities().stream()
+				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+		
+		User currentUser = getCurrentUser();
+		boolean isSelf = currentUser.getId().equals(user.getId());
+		
+		if(!isCallerAdmin && !isSelf)
+			throw new AccessDeniedException("Access denied: You cannot edit another user's profile.");
+		
+		if (isCallerAdmin && !isSelf) {
+			user.setRoles(req.isAdmin() ? AppConstants.ROLE_ADMIN : AppConstants.ROLE_USER);
+		}
 		
 		if (req.firstName() != null) user.setFirstName(req.firstName());
 		if (req.lastName() != null) user.setLastName(req.lastName());
@@ -61,11 +84,6 @@ public class UserService {
 			});
 			user.setEmail(normalizedEmail);
 		}
-		
-		if (req.isAdmin()) {
-			user.setRoles(AppConstants.ROLE_ADMIN);
-		}
-		
 		User savedUser = userRepository.save(user);
 		return mapToResponse(savedUser);
 	}

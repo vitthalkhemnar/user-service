@@ -80,18 +80,4 @@ public class OtpService {
 		log.info("Generated Phone OTP for {}: {}", normalizedPhone, otp);
 		return otp;
 	}
-
-	public boolean validatePhoneOtp(String phone, String otp) {
-		if (phone == null || otp == null || otp.isBlank()) {
-			return false;
-		}
-		String storedOtp = redisTemplate.opsForValue().get("OTP_PHONE:" + phone.trim());
-		return storedOtp != null && storedOtp.equals(otp.trim());
-	}
-
-	public void consumePhoneOtp(String phone, String otp) {
-		if (phone != null) {
-			redisTemplate.delete("OTP_PHONE:" + phone.trim());
-		}
-	}
 }

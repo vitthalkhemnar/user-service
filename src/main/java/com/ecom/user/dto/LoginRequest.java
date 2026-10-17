@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Request payload to verify Email OTP and login/register")
-public record VerifyOtpRequest(
+public record LoginRequest(
 		@Schema(description = "Customer email address", example = "customer@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
 		String email,
 

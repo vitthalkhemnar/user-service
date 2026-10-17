@@ -2,12 +2,14 @@ package com.ecom.user.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,9 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ecom.user.constants.AppConstants;
 import com.ecom.user.dto.AdminLoginRequest;
 import com.ecom.user.dto.AuthResponse;
+import com.ecom.user.dto.LoginRequest;
 import com.ecom.user.dto.SendOtpRequest;
 import com.ecom.user.dto.SignupRequest;
-import com.ecom.user.dto.VerifyOtpRequest;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.UserRepository;
 import com.ecom.user.security.OtpAuthenticationToken;
@@ -35,7 +37,6 @@ public class AuthService {
 
 	private final UserRepository userRepo;
 	private final AuthenticationManager authenticationManager;
-	private final UserDetailsService userDetailsService;
 	private final JwtService jwtService;
 	private final OtpService otpService;
 
@@ -43,13 +44,13 @@ public class AuthService {
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(req.username(), req.password())
 		);
-
 		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
 		boolean isAdmin = userDetails.getAuthorities().stream()
 				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals(AppConstants.ROLE_ADMIN));
 
 		if (!isAdmin) {
+			SecurityContextHolder.clearContext();
 			throw new BadCredentialsException("Access denied: Admin role required");
 		}
 
@@ -58,8 +59,15 @@ public class AuthService {
 				.toList();
 
 		String token = jwtService.generateToken(Map.of("role", roles), userDetails);
-
-		return new AuthResponse(token, userDetails.getUsername(), roles);
+		
+		Optional<User> user = userRepo.findByEmail(req.username().trim().toLowerCase());
+		if (user.isEmpty()) {
+			log.info("User not found. " + req.username());
+			SecurityContextHolder.clearContext();
+		}
+		
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		return new AuthResponse(token, user.get().getFirstName(), roles);
 	}
 
 	public Map<String, String> sendOtp(SendOtpRequest req) {
@@ -91,11 +99,10 @@ public class AuthService {
 		return Map.of("status", "success", "message", "OTP sent successfully to " + email);
 	}
 
-	public AuthResponse verifyOtp(VerifyOtpRequest req) {
+	public AuthResponse login(LoginRequest req) {
 		Authentication authentication = authenticationManager.authenticate(
 				new OtpAuthenticationToken(req.email(), req.otp())
 		);
-
 		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
 		List<String> roles = userDetails.getAuthorities().stream()
@@ -103,14 +110,23 @@ public class AuthService {
 				.toList();
 
 		String token = jwtService.generateToken(Map.of("role", roles), userDetails);
-		User user = userRepo.findByEmail(req.email().trim().toLowerCase()).orElse(null);
-		String displayName = (user != null && user.getFirstName() != null) ? user.getFirstName() : userDetails.getUsername();
-
-		return new AuthResponse(token, displayName, roles);
+		
+		Optional<User> user = userRepo.findByEmail(req.email().trim().toLowerCase());
+		if (user.isEmpty()) {
+			log.info("User not found. " + req.email());
+			SecurityContextHolder.clearContext();
+		}
+		
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		return new AuthResponse(token, user.get().getFirstName(), roles);
 	}
 
 	@Transactional
 	public AuthResponse register(SignupRequest req) {
+		if(req.otp() == null || req.otp().length() != 6) {
+			throw new IllegalArgumentException("Otp is not valid");
+		}
+		
 		if (req.phone() == null || req.phone().isBlank()) {
 			throw new IllegalArgumentException("Phone number is required");
 		}
@@ -123,10 +139,6 @@ public class AuthService {
 		if (userRepo.existsByEmail(normalizedEmail)) {
 			throw new IllegalArgumentException("Email already exists: " + req.email());
 		}
-		if (req.otp() == null || !otpService.validateOtp(normalizedEmail, req.otp())) {
-			throw new BadCredentialsException("Invalid or expired OTP");
-		}
-		otpService.consumeOtp(normalizedEmail, req.otp());
 
 		User user = new User();
 		user.setPhone(normalizedPhone);
@@ -134,15 +146,8 @@ public class AuthService {
 		user.setLastName(req.lastName() != null && !req.lastName().isBlank() ? req.lastName().trim() : null);
 		user.setEmail(normalizedEmail);
 		user.setRoles(AppConstants.ROLE_USER);
-		User saved = userRepo.save(user);
-
-		UserDetails userDetails = userDetailsService.loadUserByUsername(normalizedEmail);
-		List<String> roles = userDetails.getAuthorities().stream()
-				.map(GrantedAuthority::getAuthority)
-				.toList();
-
-		String token = jwtService.generateToken(Map.of("role", roles), userDetails);
-		String displayName = saved.getFirstName() != null ? saved.getFirstName() : saved.getPhone();
-		return new AuthResponse(token, displayName, roles);
+		userRepo.save(user);
+		
+		return login(new LoginRequest(normalizedEmail, req.otp()));
 	}
 }

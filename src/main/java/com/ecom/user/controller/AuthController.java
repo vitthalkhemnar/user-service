@@ -13,7 +13,7 @@ import com.ecom.user.dto.AuthResponse;
 import com.ecom.user.dto.SignupRequest;
 import com.ecom.user.dto.SendOtpRequest;
 import com.ecom.user.dto.SendPhoneOtpRequest;
-import com.ecom.user.dto.VerifyOtpRequest;
+import com.ecom.user.dto.LoginRequest;
 import com.ecom.user.dto.VerifyPhoneOtpRequest;
 import com.ecom.user.service.AuthService;
 
@@ -53,9 +53,9 @@ public class AuthController {
 		summary = "Verify email OTP and login/register",
 		description = "Validates the 6-digit OTP against Redis. If no account exists for this email, creates a new user account automatically and issues a JWT token."
 	)
-	@PostMapping("/verify-otp")
-	public ResponseEntity<AuthResponse> verifyOtp(@RequestBody VerifyOtpRequest req) {
-		return ResponseEntity.ok(authService.verifyOtp(req));
+	@PostMapping("/login")
+	public ResponseEntity<AuthResponse> verifyOtp(@RequestBody LoginRequest req) {
+		return ResponseEntity.ok(authService.login(req));
 	}
 
 	@Tag(name = "Authentication - Email OTP", description = "Customer email registration and authentication flow using Email OTP")
