@@ -3,6 +3,7 @@ package com.ecom.user.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ecom.user.dto.AddressRequest;
 import com.ecom.user.dto.AddressResponse;
@@ -10,7 +11,6 @@ import com.ecom.user.entity.Address;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.AddressRepository;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +22,7 @@ public class AddressService {
 	private final AddressRepository addressRepo;
 	private final UserService userService;
 	
+	@Transactional
 	public List<AddressResponse> addAddress(AddressRequest req) {
 		User user = userService.getCurrentUser();
 		
@@ -52,6 +53,7 @@ public class AddressService {
 		return addressList.stream().map(this::buildAddressResponse).toList();
 	}
 	
+	@Transactional
 	public List<AddressResponse> deleteAddress(Long addressId) {
 		User user = userService.getCurrentUser();
 

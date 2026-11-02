@@ -10,6 +10,8 @@ import com.ecom.user.entity.Address;
 import com.ecom.user.entity.User;
 
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Repository
 public interface AddressRepository extends JpaRepository<Address, Long> {
 
@@ -17,5 +19,6 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
 	
 	Optional<Address> findByAddressIdAndUser(Long addressId, User user);
 	
+	@Transactional
 	void deleteByAddressIdAndUser(Long addressId, User user);
 }
