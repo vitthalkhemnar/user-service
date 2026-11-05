@@ -2,7 +2,6 @@ package com.ecom.user.service;
 
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,17 +32,20 @@ public class UserService {
 
 	public UserResponse getUserByUsername(String identifier) {
 		if (identifier == null || identifier.isBlank()) return null;
-		User user = userRepository.findByPhone(identifier)
-				.or(() -> userRepository.findByEmail(identifier))
+		User user = userRepository.findByPhone(identifier.trim())
+				.or(() -> userRepository.findByEmailIgnoreCase(identifier.trim()))
 				.orElse(null);
 		return mapToResponse(user);
 	}
 	
 	public User getCurrentUser() {
 		String identifier = CommonUtil.getCurrentUsername();
-		return userRepository.findByPhone(identifier)
-				.or(() -> userRepository.findByEmail(identifier))
-				.orElseThrow(RuntimeException::new);
+		if (identifier == null || identifier.isBlank()) {
+			throw new EntityNotFoundException("Current user identifier is missing from security context");
+		}
+		return userRepository.findByPhone(identifier.trim())
+				.or(() -> userRepository.findByEmailIgnoreCase(identifier.trim()))
+				.orElseThrow(() -> new EntityNotFoundException("User not found: " + identifier));
 	}
 	
 	public UserResponse getUserById(Long userId) {
@@ -81,7 +83,7 @@ public class UserService {
 		if (req.phone() != null && !req.phone().isBlank()) user.setPhone(req.phone().trim());
 		if (req.email() != null && !req.email().isBlank()) {
 			String normalizedEmail = req.email().trim().toLowerCase();
-			userRepository.findByEmail(normalizedEmail).ifPresent(existing -> {
+			userRepository.findByEmailIgnoreCase(normalizedEmail).ifPresent(existing -> {
 				if (!existing.getId().equals(user.getId())) {
 					throw new IllegalArgumentException("Email already in use: " + req.email());
 				}
