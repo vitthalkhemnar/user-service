@@ -49,7 +49,7 @@ public class JwtService {
 		return claimsResolver.apply(claims);
 	}
 
-	private Claims extractAllClaims(String token) {
+	public Claims extractAllClaims(String token) {
 		return Jwts.parser()
 				.verifyWith(getSigningKey())
 				.build()
@@ -62,7 +62,7 @@ public class JwtService {
 		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
 	}
 
-	private boolean isTokenExpired(String token) {
+	public boolean isTokenExpired(String token) {
 		Date expiration = extractClaims(token, Claims::getExpiration);
 		return expiration.before(new Date());
 	}

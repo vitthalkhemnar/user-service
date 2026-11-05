@@ -1,9 +1,11 @@
 package com.ecom.user.filter;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,29 +15,27 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.ecom.user.service.JwtService;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtService jwtService;
 	private final UserDetailsService userDetailsService;
-	
-	private static final List<String> PUBLIC_PATHS = List.of(
-            "/auth/login",
-            "/auth/register"
-    );
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        return path != null && (path.startsWith("/auth/") || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs"));
-    }
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) {
+		String path = request.getServletPath();
+		return path != null && (path.startsWith("/auth/") || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs"));
+	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -48,27 +48,59 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		String jwt = authHeader.substring(7);
-		String username = jwtService.extractUsername(jwt);
+		String jwt = authHeader.substring(7).trim();
+		String originalThreadName = Thread.currentThread().getName();
 
-		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			
-			UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+		try {
+			Claims claims = jwtService.extractAllClaims(jwt);
+			if (claims != null && !jwtService.isTokenExpired(jwt)) {
+				String username = claims.getSubject();
 
-			if (jwtService.isTokenValid(jwt, userDetails)) {
+				if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+					UserDetails userDetails = null;
+					try {
+						userDetails = userDetailsService.loadUserByUsername(username);
+					} catch (Exception ignored) {
+						log.debug("User {} not found in local DB, checking token claims", username);
+					}
 
-				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-						null, userDetails.getAuthorities());
-				
-				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-				
-				Thread.currentThread().setName(username);
+					Collection<SimpleGrantedAuthority> authorities;
+					if (userDetails != null) {
+						@SuppressWarnings("unchecked")
+						Collection<SimpleGrantedAuthority> auths = (Collection<SimpleGrantedAuthority>) userDetails.getAuthorities();
+						authorities = auths;
+					} else {
+						Object roleClaim = claims.get("role");
+						if (roleClaim instanceof List<?> roleList) {
+							authorities = roleList.stream()
+									.map(r -> new SimpleGrantedAuthority(r.toString()))
+									.toList();
+						} else if (roleClaim instanceof String roleStr) {
+							authorities = List.of(new SimpleGrantedAuthority(roleStr));
+						} else {
+							authorities = List.of();
+						}
+					}
 
-				SecurityContextHolder.getContext().setAuthentication(authToken);
+					Object principal = (userDetails != null) ? userDetails : username;
+					UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+							principal, null, authorities
+					);
+					authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+					Thread.currentThread().setName(username);
+					SecurityContextHolder.getContext().setAuthentication(authToken);
+				}
 			}
+		} catch (Exception e) {
+			log.error("JWT validation failed: {}", e.getMessage());
+			SecurityContextHolder.clearContext();
 		}
 
-		filterChain.doFilter(request, response);
+		try {
+			filterChain.doFilter(request, response);
+		} finally {
+			Thread.currentThread().setName(originalThreadName);
+		}
 	}
-
 }
