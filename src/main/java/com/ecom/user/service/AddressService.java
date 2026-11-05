@@ -10,6 +10,7 @@ import com.ecom.user.dto.AddressResponse;
 import com.ecom.user.entity.Address;
 import com.ecom.user.entity.User;
 import com.ecom.user.repository.AddressRepository;
+import com.ecom.user.util.CommonUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +68,11 @@ public class AddressService {
 	public AddressResponse getAddressById(Long addressId) {
 		if (addressId == null) return null;
 		
+		if (CommonUtil.isAdmin()) {
+			Address address = addressRepo.findById(addressId).orElse(null);
+			return address != null ? buildAddressResponse(address) : null;
+		}
+
 		User user = userService.getCurrentUser();
 		Address address = addressRepo.findByAddressIdAndUser(addressId, user).orElse(null);
 		return address != null ? buildAddressResponse(address) : null;
