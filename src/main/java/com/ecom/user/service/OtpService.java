@@ -29,7 +29,7 @@ public class OtpService {
 
 		// Key is email, TTL is 5 minutes
 		redisTemplate.opsForValue().set(
-				normalizedEmail,
+				"OTP_MAIL:" + normalizedEmail,
 				otp,
 				OTP_EXPIRY_MINUTES,
 				TimeUnit.MINUTES
@@ -54,7 +54,7 @@ public class OtpService {
 
 		String normalizedEmail = email.trim().toLowerCase();
 		// Key is email to retrieve from Redis
-		String storedOtp = redisTemplate.opsForValue().get(normalizedEmail);
+		String storedOtp = redisTemplate.opsForValue().get("OTP_MAIL:" + normalizedEmail);
 
 		return storedOtp != null && storedOtp.equals(otp.trim());
 	}
@@ -62,7 +62,7 @@ public class OtpService {
 	public void consumeOtp(String email, String otp) {
 		if (email != null) {
 			String normalizedEmail = email.trim().toLowerCase();
-			redisTemplate.delete(normalizedEmail);
+			redisTemplate.delete("OTP_MAIL:" + normalizedEmail);
 		}
 	}
 
