@@ -22,7 +22,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
-		User user = userRepository.findByEmail(identifier)
+		if (identifier == null || identifier.isBlank()) {
+			throw new UsernameNotFoundException("Email or username cannot be empty");
+		}
+		User user = userRepository.findByEmailIgnoreCase(identifier.trim())
 				.orElseThrow(() -> new UsernameNotFoundException("No user found with email: " + identifier));
 
 		return buildUserDetails(user);

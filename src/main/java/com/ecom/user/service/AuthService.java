@@ -2,7 +2,6 @@ package com.ecom.user.service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -11,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,8 +39,12 @@ public class AuthService {
 	private final OtpService otpService;
 
 	public AuthResponse adminLogin(AdminLoginRequest req) {
+		if (req.username() == null || req.username().isBlank()) {
+			throw new BadCredentialsException("Username or email is required");
+		}
+		String normalizedEmail = req.username().trim().toLowerCase();
 		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(req.username(), req.password())
+				new UsernamePasswordAuthenticationToken(normalizedEmail, req.password())
 		);
 		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
@@ -60,14 +62,18 @@ public class AuthService {
 
 		String token = jwtService.generateToken(Map.of("role", roles), userDetails);
 		
-		Optional<User> user = userRepo.findByEmail(req.username().trim().toLowerCase());
-		if (user.isEmpty()) {
-			log.info("User not found. " + req.username());
-			SecurityContextHolder.clearContext();
-		}
+		User user = userRepo.findByEmailIgnoreCase(normalizedEmail)
+				.orElseThrow(() -> {
+					SecurityContextHolder.clearContext();
+					log.info("User not found: {}", normalizedEmail);
+					return new BadCredentialsException("Invalid credentials or user not found.");
+				});
 		
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		return new AuthResponse(token, user.get().getFirstName(), roles);
+		String displayName = (user.getFirstName() != null && !user.getFirstName().isBlank())
+				? user.getFirstName()
+				: user.getEmail();
+		return new AuthResponse(token, displayName, roles);
 	}
 
 	public Map<String, String> sendOtp(SendOtpRequest req) {
@@ -79,11 +85,11 @@ public class AuthService {
 		
 		if (req.action().equalsIgnoreCase("login")) {
 			try {
-				User user = userRepo.findByEmail(normalizedEmail)
+				User user = userRepo.findByEmailIgnoreCase(normalizedEmail)
 						.orElseThrow(() -> new UsernameNotFoundException("No user found with email: " + email));
 				String roles = user.getRoles();
 				boolean isAdmin = Arrays.asList(roles.split(",")).stream()
-						.anyMatch(a -> a.equals("ROLE_" + AppConstants.ROLE_ADMIN));
+						.anyMatch(a -> a.equals("ROLE_" + AppConstants.ROLE_ADMIN) || a.equals(AppConstants.ROLE_ADMIN));
 
 				if (isAdmin) {
 					log.error("ADMIN cannot logged in via OTP : " + normalizedEmail);
@@ -100,8 +106,12 @@ public class AuthService {
 	}
 
 	public AuthResponse login(LoginRequest req) {
+		if (req.email() == null || req.email().isBlank()) {
+			throw new BadCredentialsException("Email is required");
+		}
+		String normalizedEmail = req.email().trim().toLowerCase();
 		Authentication authentication = authenticationManager.authenticate(
-				new OtpAuthenticationToken(req.email(), req.otp())
+				new OtpAuthenticationToken(normalizedEmail, req.otp())
 		);
 		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
@@ -111,14 +121,18 @@ public class AuthService {
 
 		String token = jwtService.generateToken(Map.of("role", roles), userDetails);
 		
-		Optional<User> user = userRepo.findByEmail(req.email().trim().toLowerCase());
-		if (user.isEmpty()) {
-			log.info("User not found. " + req.email());
-			SecurityContextHolder.clearContext();
-		}
+		User user = userRepo.findByEmailIgnoreCase(normalizedEmail)
+				.orElseThrow(() -> {
+					SecurityContextHolder.clearContext();
+					log.info("User not found: {}", normalizedEmail);
+					return new BadCredentialsException("Invalid credentials or user not found.");
+				});
 		
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		return new AuthResponse(token, user.get().getFirstName(), roles);
+		String displayName = (user.getFirstName() != null && !user.getFirstName().isBlank())
+				? user.getFirstName()
+				: user.getEmail();
+		return new AuthResponse(token, displayName, roles);
 	}
 
 	@Transactional
@@ -135,8 +149,8 @@ public class AuthService {
 		if (req.email() == null || req.email().isBlank()) {
 			throw new IllegalArgumentException("Email is required");
 		}
-		String normalizedEmail = req.email().trim();
-		if (userRepo.existsByEmail(normalizedEmail)) {
+		String normalizedEmail = req.email().trim().toLowerCase();
+		if (userRepo.existsByEmailIgnoreCase(normalizedEmail)) {
 			throw new IllegalArgumentException("Email already exists: " + req.email());
 		}
 
